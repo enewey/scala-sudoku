@@ -1,12 +1,7 @@
 package sudoku
-
 import scala.util.Random
 
-object Solver {
-  val puzzleString = "0,0,3,0,2,0,6,0,0,9,0,0,3,0,5,0,0,1,0,0,1,8,0,6,4,0,0,0,0,8,1,0,2,9,0,0,7,0,0,0,0,0,0,0,8,0,0,6,7,0,8,2,0,0,0,0,2,6,0,9,5,0,0,8,0,0,2,0,3,0,0,9,0,0,5,0,1,0,3,0,0"
-  val hardPuzzleString = "4,0,0,0,0,0,8,0,5,0,3,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,0,2,0,0,0,0,0,6,0,0,0,0,0,8,0,4,0,0,0,0,0,0,1,0,0,0,0,0,0,0,6,0,3,0,7,0,5,0,0,2,0,0,0,0,0,1,0,4,0,0,0,0,0,0"
-  val threeByTwo = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
-  
+class Puzzle {  
   def generateSudoku(rows:Int, cols:Int, holes:Int): String = {
     def poke(model:Map[String, Set[Int]], times:Int, max:Int): Map[String, Set[Int]] = {
       if (times == 0 || times > max*max) return model
@@ -221,21 +216,4 @@ object Solver {
    */
   def getIntCoords(coords:String): (Int,Int) = { (coords.charAt(0).toInt-65, coords.substring(1).toInt) }
   def getStringCoords(row:Int, col:Int): String = { (((row+65).toChar).toString+col.toString) }
-  
-  /**
-   * Used for testing... until I can figure out how to use ScalaTest
-   */
-  def main(args:Array[String]) {
-    //Easy puzzle
-    println(solveSudoku(puzzleString, (3,3)))
-    //Hard puzzle
-    println(solveSudoku(hardPuzzleString, (3,3)))
-    
-    println(generateSudoku(3, 2, 10))
-    println(generateSudoku(3, 3, 50))
-    println(generateSudoku(4, 3, 85))
-    println(generateSudoku(4, 4, 160))
-    println(generateSudoku(4, 5, 250))
-    println(generateSudoku(5, 5, 400))
-  }
 }
