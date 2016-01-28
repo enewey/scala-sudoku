@@ -10,7 +10,9 @@ object Solver {
   def generateSudoku(rows:Int, cols:Int, holes:Int): String = {
     def poke(model:Map[String, Set[Int]], times:Int, max:Int): Map[String, Set[Int]] = {
       if (times == 0 || times > max*max) return model
-      poke(model.updated(Random.shuffle(model.keys.filter(a => model.get(a).get.size == 1)).head, (0 to max).toSet), times-1, max)
+      val rand = new Random()
+      val shuf = rand.shuffle(model.keys.filter(a => model.get(a).get.size == 1))
+      poke(model.updated(shuf.toList(rand.nextInt(shuf.size-1)), (0 to max).toSet), times-1, max)
     }
     
     val nums = Random.shuffle((1 to (rows*cols))).mkString(",") //generate the first row
@@ -18,7 +20,6 @@ object Solver {
     val m = initModel(nums+zeroes, rows, cols)
     val soln = poke(getSolution((m._1,true), m._2)._1, holes, rows*cols)
     return stringGrid(stringModel(soln), (rows, cols)) + "\n"
-    //return solveSudoku(nums+zeroes, (rows, cols))
   }
   
   def solveSudoku(in:String, dims:(Int,Int)):String = {
@@ -206,24 +207,12 @@ object Solver {
     List(getRowKeys(model,coord),getColKeys(model,coord),getSquareKeys(model,coord, dims))
   }
  
-  /**
-   * Determine if a sudoku puzzle is solved
-   */
-  def isSolved(model:Map[String, Set[Int]], dims:(Int,Int)): Boolean = {
-    model.forall(p => verifySquare(model, p, dims))
-  }
   
-  /**
-   * Verify if an individual square does not violate any constraints
-   */
+  def isSolved(model:Map[String, Set[Int]], dims:(Int,Int)): Boolean = { model.forall(p => verifySquare(model, p, dims)) }
   def verifySquare(model:Map[String, Set[Int]], square:(String, Set[Int]), dims:(Int,Int)): Boolean = {
     if (square._2.size != 1) return false
-    
-    //get the unit keys, excluding the square we are testing
     val keySets = getUnitKeys(model, square._1, dims).map(r => r.filter(p => !p.equals(square._1)))
     val v = square._2.head
-    
-    //test all other squares in the model that exist in the unit keys, and make sure they don't contain the square's value
     keySets.forall(keySet => model.filter(a => keySet.contains(a._1)).forall(p => !p._2.contains(v)))
   }
   
@@ -237,15 +226,6 @@ object Solver {
    * Used for testing... until I can figure out how to use ScalaTest
    */
   def main(args:Array[String]) {
-    
-    println(getIntCoords("P12"))
-    println(getIntCoords("K1"))
-    println(getStringCoords(15,12))
-    println(getStringCoords(10,1))
-    
-    
-    
-    
     //Easy puzzle
     println(solveSudoku(puzzleString, (3,3)))
     //Hard puzzle
