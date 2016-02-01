@@ -6,7 +6,7 @@ object Generate {
       println("Invalid arg length")
     } else {
       val solver = new Puzzle()
-      println(solver.generateSudoku(args(0).toInt, args(1).toInt, args(2).toInt))
+      println(args(0).toInt +" "+ args(1).toInt + "\n" + solver.generateSudoku(args(0).toInt, args(1).toInt, args(2).toInt))
     }
   }
 }

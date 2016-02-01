@@ -2,6 +2,10 @@ package sudoku
 import scala.util.Random
 
 class Puzzle {  
+  
+  /**
+   * Generates a mxn sudoku puzzle, where holes is the number of blank spots in the puzzle.
+   */
   def generateSudoku(rows:Int, cols:Int, holes:Int): String = {
     def poke(model:Map[String, Set[Int]], times:Int, max:Int): Map[String, Set[Int]] = {
       if (times == 0 || times > max*max) return model
@@ -17,6 +21,10 @@ class Puzzle {
     return stringGrid(stringModel(soln), (rows, cols)) + "\n"
   }
   
+  /**
+   * Solves a sudoku puzzle, represented as a single string of comma-separated numbers, 
+   *  and a tuple describing the mxn dimensions
+   */
   def solveSudoku(in:String, dims:(Int,Int)):String = {
     val m = initModel(in, dims._1, dims._2)
     return stringGrid(stringModel(getSolution((m._1,true), m._2)._1), (dims._1, dims._2)) + "\n"
@@ -24,7 +32,7 @@ class Puzzle {
   
   /**
    * Formats a comma-separated string of numbers into a grid of the given dimensions.
-   * Will fail if the string of numbers does not contain mxn numbers.
+   * Will fail if the string of numbers does not contain m*n numbers.
    */
   def stringGrid(in:String, dims:(Int,Int)): String = {
     val maxNumLen = (dims._1*dims._2).toString().length()
@@ -37,6 +45,20 @@ class Puzzle {
     }
     
     recur(grid, maxNumLen, 0, "")
+  }
+  
+  /**
+   * Utility to convert from a grid to a comma-separated string of numbers, along with a tuple describing the dimensions.
+   */
+  def stringFromGrid(in:String): (String, (Int,Int)) = {
+    def recur(str:String, lines:List[String]): String = {
+      if (lines.size == 0) return str
+      val line = lines(0).replace('_', '0').trim().split(" ").mkString(",")
+      return recur((if (!str.isEmpty()) str + "," else str) + lines(0).replace('_', '0').trim().split(" ").mkString(","), lines.drop(1))
+    }
+    val lines = in.split("\n").toList
+    val dims = lines(0).trim().split(" ")
+    return ( recur("", lines.drop(1)), (dims(0).toInt, dims(1).toInt) )
   }
   
   /**
@@ -55,7 +77,7 @@ class Puzzle {
   }
   
   /**
-   * Model the solution as a nxn dictionary of strings to sets
+   * Model the solution as a mxn dictionary of strings to sets
    * rows are A-*, columns are 1-n, so the strings are A1, A2, ... etc.
    * The sets are integer sets that detail what number each space could possibly contain
    * Without applying constraints, each set starts out with all numbers 1-n
@@ -101,6 +123,14 @@ class Puzzle {
     recur(model.get(coord).get.-(value).toList, model)
   }
   
+  /**
+   * Called by the 'place' function; will attempt to remove the value placed in the square from its peers,
+   *  and report any contradictions.
+   * There are three contradictions to consider:
+   * 		1. Trying to remove the final value possible for a square.
+   * 		2. After removal, there is only one value remaining in a square, and that value can't be removed from peers.
+   * 		3. The removed value cannot be placed in any other square
+   */
   def removal(coord:String, value:Int, model:Map[String, Set[Int]], dims:(Int,Int)): (Map[String, Set[Int]], Boolean) = {
     //Helper method 1 - searches for two contradictions, based on what values are already "solved"
     def removal2(coord:String, model:Map[String, Set[Int]], m:Map[String, Set[Int]]): (Map[String, Set[Int]], Boolean) = {
@@ -176,33 +206,44 @@ class Puzzle {
     (model._1, false) //if we can't find a solution, just spit it back out.
   }
   
+  /**
+   * Helper methods: Group-getting methods for the sudoku puzzle.
+   */
   def getRowKeys(model:Map[String, Set[Int]], coord:String): List[String] = { model.keys.filter(s => s.contains(coord.charAt(0))).toList }
   def getColKeys(model:Map[String, Set[Int]], coord:String): List[String] = { model.keys.filter(s => s.substring(1).equals(coord.substring(1))).toList }
   def getSquareKeys(model:Map[String, Set[Int]], coord:String, dims:(Int,Int)): List[String] = { (getSquareTuples(dims, model, coord).map(a => getStringCoords(a._1, a._2))) }
   
+  /**
+   * Helpers for the group-getters
+   */
   def getSquareTuples(dims:(Int,Int), model:Map[String, Set[Int]], coord:String): List[(Int,Int)] = {
+    def getOffset(dims:(Int,Int), t:(Int, Int)): (Int,Int) = {
+      ((Math.floor(t._1 / dims._2).toInt * dims._2), 
+        (Math.floor(t._2 / dims._1).toInt * dims._1))
+    }
+    
     val offset = getOffset(dims, getIntCoords(coord))
     val rows = List.range(offset._1, offset._1+dims._2)
     val cols = List.range(offset._2, offset._2+dims._1)
     (for (r <- rows) yield for (c <- cols) yield (r,c)).flatMap(x => x)
-  }
-  /**
-   * Snap row/col coordinates to the square block region of the sudoku puzzle they belong to.
-   */
-  def getOffset(dims:(Int,Int), t:(Int, Int)): (Int,Int) = {
-    ((Math.floor(t._1 / dims._2).toInt * dims._2), 
-      (Math.floor(t._2 / dims._1).toInt * dims._1))
-  }
+  }  
   
+  /**
+   * Peer keys: Returns a set of all keys that share a row, column, or square-group with a single space.
+   */
   def getPeerKeys(model:Map[String, Set[Int]], coord:String, dims:(Int,Int)): Set[String] = {
     (getRowKeys(model,coord)++getColKeys(model,coord)++getSquareKeys(model,coord, dims)).filter(s => !s.equals(coord)).toSet
   }
-  
+  /**
+   * Unit keys: Returns three lists of keys related to a space: The row, the column, and the square-group.
+   */
   def getUnitKeys(model:Map[String, Set[Int]], coord:String, dims:(Int,Int)): List[List[String]] = {
     List(getRowKeys(model,coord),getColKeys(model,coord),getSquareKeys(model,coord, dims))
   }
  
-  
+  /**
+   * Methods used to determine if a sudoku puzzle is solved.
+   */
   def isSolved(model:Map[String, Set[Int]], dims:(Int,Int)): Boolean = { model.forall(p => verifySquare(model, p, dims)) }
   def verifySquare(model:Map[String, Set[Int]], square:(String, Set[Int]), dims:(Int,Int)): Boolean = {
     if (square._2.size != 1) return false
