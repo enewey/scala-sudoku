@@ -12,6 +12,16 @@ object Test {
     val grid = solver.stringFromGrid(puzz)
     println(grid)
     println("Solving puzzle")
-    println(solver.solveSudoku(grid._1, grid._2))  
+    println(solver.solveSudoku(grid._1, grid._2))
+    
+    
+    println("Generating 4x4 puzzle with 200 holes")
+    val puzz2 = "4 4"+solver.generateSudoku(4, 4, 200)
+    println(puzz2)
+    println("generating csv for solver")
+    val grid2 = solver.stringFromGrid(puzz2)
+    println(grid2._1)
+    println("Solving puzzle")
+    println(solver.solveSudoku(grid2._1, grid2._2))  
   }
 }

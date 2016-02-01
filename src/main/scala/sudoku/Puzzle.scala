@@ -53,8 +53,8 @@ class Puzzle {
   def stringFromGrid(in:String): (String, (Int,Int)) = {
     def recur(str:String, lines:List[String]): String = {
       if (lines.size == 0) return str
-      val line = lines(0).replace('_', '0').trim().split(" ").mkString(",")
-      return recur((if (!str.isEmpty()) str + "," else str) + lines(0).replace('_', '0').trim().split(" ").mkString(","), lines.drop(1))
+      val line = lines(0).trim().replaceAll("\\s+", ",").replace('_', '0')
+      return recur((if (!str.isEmpty()) str + "," else str) + line, lines.drop(1))
     }
     val lines = in.split("\n").toList
     val dims = lines(0).trim().split(" ")
